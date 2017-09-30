@@ -37,6 +37,11 @@
     <Compile Include="DataObject.cs" />
     <Compile Include="NetWorkContoroller.cs" />
     <Compile Include="DitributionContoroller.cs" />
+    <Compile Include="DataReceiverController.cs" />
+    <Compile Include="DataCacheController.cs" />
+    <Compile Include="FileExportController.cs" />
+    <Compile Include="DataSenderController.cs" />
+    <Compile Include="ManagerComunicationController.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
