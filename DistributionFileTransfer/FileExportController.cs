@@ -19,6 +19,8 @@ namespace DistributionFileTransfer
 			this.dataQueue.Enqueue(data);
 		}
 
+
+
 		// ファイルのエクスポートの実施（シングルに一度Queuing）
 		private void fileExportThread(object e)
 		{

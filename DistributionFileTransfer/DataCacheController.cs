@@ -39,7 +39,7 @@ namespace DistributionFileTransfer
 		public List<DataObject> getAllDataList()
 		{
 			List<DataObject> returnDataList = new List<DataObject>();
-			lock (((ICollection)dataCache).SyncRoot)
+			lock (this)
 			{
 				foreach (string dataId in dataCache.Keys)
 				{

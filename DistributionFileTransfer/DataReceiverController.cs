@@ -1,11 +1,13 @@
 ﻿using System;
 using DistributionFileTrasfer;
+using System.Collections.Concurrent;
 
 namespace DistributionFileTransfer
 {
 	public class DataReceiverController
 	{
-		private NetWorkContoroller dataReciever;
+		//private NetWorkContoroller dataReciever;
+		private ConcurrentQueue<DataObject> dataList;
 		private DataCacheController dataCache;
 		private FileExportController fileExport;
 		private DataSenderController dataSender;
@@ -17,47 +19,62 @@ namespace DistributionFileTransfer
 		                              FileExportController fileExport,
 		                              DataSenderController dataSender)
 		{
-			this.dataReciever = null;
+			//this.dataReciever = null;
+			this.dataList = new ConcurrentQueue<DataObject>();
 			this.dataCache = dataCache;
 			this.fileExport = fileExport;
 			this.dataSender = dataSender;
 			this.isAct = true;
-			this.dataReceiveThread = new System.Threading.Thread(dataReceiveThreadAction);
+			this.dataReceiveThread = new System.Threading.Thread(dataSendThreadAction);
 		}
 
 		// データ受信用スレッド
-		private void dataReceiveThreadAction(object e)
+
+		private void dataSendThreadAction(object e)
 		{
-			while (this.isAct && this.dataReciever != null)
+			while (this.isAct )//&& this.dataReciever != null)
 			{
-				
+				DataObject data = null;
+				if (this.dataList.TryDequeue(out data))
+				{
+					// データの送信
+					this.dataSender.setDataObject(data);
+
+					// キャッシュへ登録
+					this.dataCache.setDataCache(data);
+
+					// ファイルの出力
+					this.fileExport.setFileData(data);
+
+				}
 				System.Threading.Thread.Sleep(10);
 			}
 		}
 
-		private void dataReceiveAction(DistributionFileTrasfer.DataObject data)
+		// データの登録
+		public void setSendData(DataObject data)
 		{
-			// データのキャッシュ
-			this.dataCache.setDataCache(data);
-			this.fileExport.setFileData(data);
-			this.dataSender.setDataObject(data);
-
+			this.dataList.Enqueue(data);
 		}
 
+		/*
 		// データ受信インスタンスのセット
 		public void setDataReciever(NetWorkContoroller dataReciever)
 		{
 			while (this.dataReceiveThread.IsAlive)
 			{
 				this.Dispose();
+				System.Threading.Thread.Sleep(10);
 			}
 			lock(this)
 			{
 				this.dataReciever = dataReciever;
+				this.dataCache.resetAllCacheData();
+
 			}
 			this.dataReceiveThread.Start();
-
 		}
+		*/
 
 		// 終了処理
 		public void Dispose()

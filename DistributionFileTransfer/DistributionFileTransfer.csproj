@@ -42,6 +42,9 @@
     <Compile Include="FileExportController.cs" />
     <Compile Include="DataSenderController.cs" />
     <Compile Include="ManagerComunicationController.cs" />
+    <Compile Include="ClientComunicationManager.cs" />
+    <Compile Include="ServerComunicationManager.cs" />
+    <Compile Include="AComunicationManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

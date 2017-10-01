@@ -11,19 +11,22 @@ namespace DistributionFileTrasfer
 	{
 		private ConcurrentQueue<DataObject> sndList;
 		private ConcurrentQueue<DataObject> rcvList;
-		private System.Collections.Generic.List<TcpClient> TcpList;
+		private TcpClient tcpClient;
+		//private System.Collections.Generic.List<TcpClient> TcpList;
 
-		public NetWorkContoroller()
+		public NetWorkContoroller(TcpClient tcpClient)
 		{
+			this.tcpClient = tcpClient;
 			this.sndList = new ConcurrentQueue<DataObject>();
 			this.rcvList = new ConcurrentQueue<DataObject>();
-			this.TcpList = new System.Collections.Generic.List<TcpClient>();
+			//this.TcpList = new System.Collections.Generic.List<TcpClient>();
 
 			// thread start
 			System.Threading.ThreadPool.QueueUserWorkItem(sndMessage);
 
 		}
 
+		/*
 		public void addTcpClient(TcpClient client)
 		{
 			lock (((ICollection)this.TcpList).SyncRoot)
@@ -32,6 +35,7 @@ namespace DistributionFileTrasfer
 				System.Threading.ThreadPool.QueueUserWorkItem(rcvMessage,client);
 			}
 		}
+		*/
 
 		public void setSndMessage(DataObject obj)
 		{
@@ -51,16 +55,19 @@ namespace DistributionFileTrasfer
 		// tcp
 		private void sndMessage(object e)
 		{
-
-			System.Threading.ThreadPool.QueueUserWorkItem(sndMessage);
+			if (this.tcpClient.Connected)
+			{
+				System.Threading.Thread.Sleep(1);
+				System.Threading.ThreadPool.QueueUserWorkItem(sndMessage);
+			}
 		}
 
 		private void rcvMessage(object e)
 		{
 			TcpClient client = (TcpClient)e;
-			if (client.Connected)
+			if (this.tcpClient.Connected)
 			{
-				
+				System.Threading.Thread.Sleep(1);
 				System.Threading.ThreadPool.QueueUserWorkItem(rcvMessage, client);
 			}
 		}
