@@ -53,6 +53,8 @@ namespace DistributionFileTransfer
 			*/
 		}
 
+
+
 		// データ送信用のスレッド
 		private void dataSenderThreadAction(object e)
 		{

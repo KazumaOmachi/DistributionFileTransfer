@@ -4,6 +4,7 @@ namespace DistributionFileTransfer
 	public class AComunicationManager
 	{
 		protected bool isAct;
+		protected DataReceiverController receiver;
 
 		public AComunicationManager()
 		{
@@ -20,7 +21,7 @@ namespace DistributionFileTransfer
 
 		public void dataReceivThreadAction(object e)
 		{
-
+			
 		}
 	}
 }

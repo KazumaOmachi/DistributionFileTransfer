@@ -13,7 +13,7 @@ namespace DistributionFileTransfer
 			DataSenderController sender = new DataSenderController(cache);
 			DataReceiverController receiver = new DataReceiverController(cache, fileCtl, sender);
 
-			ManagerComunicationController manager = new ManagerComunicationController();
+			ManagerComunicationController manager = new ManagerComunicationController(receiver,cache,fileCtl,sender);
 		}
 	}
 }
