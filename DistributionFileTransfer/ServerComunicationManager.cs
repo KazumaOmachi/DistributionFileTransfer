@@ -6,16 +6,16 @@ namespace DistributionFileTransfer
 	public class ServerComunicationManager :AComunicationManager
 	{
 		private NetWorkContoroller tcpClient;
-		public ServerComunicationManager(DataReceiverController receiver)
+		public ServerComunicationManager(DataReceiverController receiver, string ip,int port)
 		{
 			this.isAct = true;
 			this.receiver = receiver;
 		}
 
+		// データの受信と送信
 		public new void dataReceivThreadAction(object e)
 		{
- 
-			while (this.isAct)
+ 			while (this.isAct)
 			{
 				Console.WriteLine("ServerComunicationManager");
 

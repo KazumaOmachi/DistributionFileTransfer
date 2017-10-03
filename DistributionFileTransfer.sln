@@ -3,6 +3,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistributionFileTransfer", "DistributionFileTransfer\DistributionFileTransfer.csproj", "{4910E30E-1E4E-46B1-A241-9473C17F7C5F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagemetFileTransfer", "ManagemetFileTransfer\ManagemetFileTransfer.csproj", "{CF216E94-5445-4E18-BB4E-1BEF0C322A6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientFileTransfer", "ClientFileTransfer\ClientFileTransfer.csproj", "{7C7CBBD5-B7B0-440A-B355-38608B6C3725}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -13,5 +17,13 @@ Global
 		{4910E30E-1E4E-46B1-A241-9473C17F7C5F}.Debug|x86.Build.0 = Debug|x86
 		{4910E30E-1E4E-46B1-A241-9473C17F7C5F}.Release|x86.ActiveCfg = Release|x86
 		{4910E30E-1E4E-46B1-A241-9473C17F7C5F}.Release|x86.Build.0 = Release|x86
+		{CF216E94-5445-4E18-BB4E-1BEF0C322A6E}.Debug|x86.ActiveCfg = Debug|x86
+		{CF216E94-5445-4E18-BB4E-1BEF0C322A6E}.Debug|x86.Build.0 = Debug|x86
+		{CF216E94-5445-4E18-BB4E-1BEF0C322A6E}.Release|x86.ActiveCfg = Release|x86
+		{CF216E94-5445-4E18-BB4E-1BEF0C322A6E}.Release|x86.Build.0 = Release|x86
+		{7C7CBBD5-B7B0-440A-B355-38608B6C3725}.Debug|x86.ActiveCfg = Debug|x86
+		{7C7CBBD5-B7B0-440A-B355-38608B6C3725}.Debug|x86.Build.0 = Debug|x86
+		{7C7CBBD5-B7B0-440A-B355-38608B6C3725}.Release|x86.ActiveCfg = Release|x86
+		{7C7CBBD5-B7B0-440A-B355-38608B6C3725}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal

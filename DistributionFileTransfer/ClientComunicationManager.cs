@@ -4,11 +4,17 @@ namespace DistributionFileTransfer
 	public class ClientComunicationManager :AComunicationManager
 	{
 		
-		
+
 		public ClientComunicationManager(DataReceiverController receiver)
 		{
 			this.isAct = true;
 			this.receiver = receiver;
+		}
+
+		// 
+		private void dataManagementThreadAction(object e)
+		{
+
 		}
 
 		public new void dataReceivThreadAction(object e)
