@@ -34,10 +34,10 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServerManagementController.cs" />
     <Compile Include="..\DistributionFileTransfer\TcpNetWork.cs">
       <Link>TcpNetWork.cs</Link>
     </Compile>
+    <Compile Include="ServerManagementController.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
