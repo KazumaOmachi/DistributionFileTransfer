@@ -57,25 +57,6 @@ namespace DistributionFileTransfer
 			this.dataList.Enqueue(data);
 		}
 
-		/*
-		// データ受信インスタンスのセット
-		public void setDataReciever(NetWorkContoroller dataReciever)
-		{
-			while (this.dataReceiveThread.IsAlive)
-			{
-				this.Dispose();
-				System.Threading.Thread.Sleep(10);
-			}
-			lock(this)
-			{
-				this.dataReciever = dataReciever;
-				this.dataCache.resetAllCacheData();
-
-			}
-			this.dataReceiveThread.Start();
-		}
-		*/
-
 		// 終了処理
 		public void Dispose()
 		{

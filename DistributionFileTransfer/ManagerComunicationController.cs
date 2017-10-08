@@ -24,11 +24,16 @@ namespace DistributionFileTransfer
 		                                     )
 
 		{
+			this.dataReciv = dataReciv;
+			this.dataCache = dataCache;
+			this.fileExport = fileExport;
+			this.dataSend = dataSend;
+
 			this.comManag = new AComunicationManager();
 			// dataReceiveThreadの初期化
 			this.dataReceiveThread = new System.Threading.Thread(this.comManag.dataReceivThreadAction);
 
-			this.dataSend = dataSend;
+
 
 			// management受け入れのスレッドの起動
 			System.Threading.ThreadPool.QueueUserWorkItem(acceptManagemet);

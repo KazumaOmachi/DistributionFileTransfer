@@ -38,6 +38,12 @@
       <Link>TcpNetWork.cs</Link>
     </Compile>
     <Compile Include="ServerManagementController.cs" />
+    <Compile Include="..\DistributionFileTransfer\NetWorkContoroller.cs">
+      <Link>NetWorkContoroller.cs</Link>
+    </Compile>
+    <Compile Include="..\DistributionFileTransfer\DataObject.cs">
+      <Link>DataObject.cs</Link>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

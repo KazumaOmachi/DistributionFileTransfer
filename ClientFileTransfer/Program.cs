@@ -24,14 +24,16 @@ namespace ClientFileTransfer
 					System.IO.File.Copy(filePath, tmpPath + filePath);
 
 					// 圧縮
-					string zipFileName = System.IO.Path.GetFileNameWithoutExtension(filePath)+ ".zip";
 
 
 					// 分割・データの作成
 
+
 					// TCPの複数ポート作成
 
+
 					// サーバへの接続
+
 
 					// 接続待ち（サーバから複数接続）
 
