@@ -34,6 +34,13 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="FileTransferController.cs" />
+    <Compile Include="..\DistributionFileTransfer\NetWorkContoroller.cs">
+      <Link>NetWorkContoroller.cs</Link>
+    </Compile>
+    <Compile Include="..\DistributionFileTransfer\DataObject.cs">
+      <Link>DataObject.cs</Link>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

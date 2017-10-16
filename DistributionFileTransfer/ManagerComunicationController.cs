@@ -65,18 +65,31 @@ namespace DistributionFileTransfer
 				// サーバプロセス用
 				string ip = "";
 				int port = 0;
-				this.comManag = new ServerComunicationManager(this.dataReciv,ip, port);
+				startServerComumnication(ip, port);
 			}
 			else
 			{
-				// クライアントプロセス用
-				this.comManag = new ClientComunicationManager(this.dataReciv);
+				startClietCommunication();
 			}
+
 			this.dataReceiveThread = new System.Threading.Thread(this.comManag.dataReceivThreadAction);
 			this.dataCache.resetAllCacheData();
 
 			this.dataReceiveThread.Start();
 
+		}
+
+		// サーバプロセスの初期化
+		public void startServerComumnication(string ip,int port)
+		{
+			this.comManag = new ServerComunicationManager(this.dataReciv, ip, port);
+		}
+
+		// クライアントプロセスの初期化
+		public void startClietCommunication()
+		{
+			// クライアントプロセス用
+			this.comManag = new ClientComunicationManager(this.dataReciv);
 		}
 	}
 }

@@ -1,38 +1,86 @@
 ﻿using System;
+using System.Collections.Generic;
+
 namespace DistributionFileTrasfer
 {
 	public enum MessageTypeEnum
 	{
-		Data = 1,
-		Controll = 2
+		HB = 0,
+		ConnectList = 1
+		//Data = 1,
+		//Controll = 2
 	}
 
 	// message when type is  1
+	/*
 	public enum DataMessageEnum
 	{
 		dataBody = 1,
 		finish = 2,
 		error = 3,
 	}
-
+	*/
 
 
 	public class DataObject
 	{
+
+		private string n;
 		private MessageTypeEnum messageType;
+
 		// for data
-		private byte[] fileDataMain;
-		private string messageID;
-		private string dataMessageType;
+		private int key;
+		private byte[] dataByte;
+		//private string messageID;
+		//private string dataMessageType;
 
 		// for contorolle
-		private string connectIP;
+		//private string connectIP;
 
-		public DataObject()
+		public DataObject() { }
+
+		public void setData(string n)
 		{
+			this.n = n;
 
 		}
 
+		public byte[] getSendData()
+		{
+			List<byte> sendByte = new List<byte>();
+			byte[] portListByte = System.Text.Encoding.ASCII.GetBytes(this.n);
+			int size = portListByte.Length;
+			byte[] sizeByte = BitConverter.GetBytes(size);
+
+			sendByte.AddRange(BitConverter.GetBytes(sizeByte.Length + portListByte.Length));
+			sendByte.AddRange(sizeByte);
+			sendByte.AddRange(portListByte);
+
+			return sendByte.ToArray();
+		}
+
+
+		public void setData(MessageTypeEnum messageType , byte[] dataByte)
+		{
+			
+		}
+		public void setConnectionListData(string portList)
+		{
+			this.messageType = MessageTypeEnum.ConnectList;
+			this.dataByte = System.Text.Encoding.ASCII.GetBytes(portList);
+		}
+
+		public DataObject byteToDataObjec(byte[] dataByte)
+		{
+			DataObject data = new DataObject();
+
+
+			return data;	
+		}
+
+
+
+		/*
 		// file data message from client
 		public void setFileData(byte[] data)
 		{
@@ -69,5 +117,6 @@ namespace DistributionFileTrasfer
 		{
 			return this.fileDataMain;
 		}
+		*/
 	}
 }

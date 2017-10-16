@@ -17,6 +17,11 @@ namespace DistributionFileTransfer
 
 			ManagerComunicationController manager = new ManagerComunicationController(receiver,cache,fileCtl,sender);
 
+			/* Debug */
+			// クライアント
+			manager.startClietCommunication();
+
+
 		}
 	}
 }

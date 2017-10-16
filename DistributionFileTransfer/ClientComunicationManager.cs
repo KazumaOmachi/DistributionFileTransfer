@@ -2,6 +2,8 @@
 using DistributionFileTrasfer;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net.Sockets;
+using System.Net;
 
 namespace DistributionFileTransfer
 {
@@ -9,13 +11,24 @@ namespace DistributionFileTransfer
 	{
 
 		private ConcurrentDictionary<string, List<NetWorkContoroller>> clientList;
+		private TcpListener listener_;
+
 
 		public ClientComunicationManager(DataReceiverController receiver)
 		{
 			this.receiver = receiver;
 			this.clientList = new ConcurrentDictionary<string, List<NetWorkContoroller>>();
-			System.Threading.ThreadPool.QueueUserWorkItem(acceptTcpConnection);
+		
 
+			// 
+			string ipString = "0.0.0.0";
+			IPAddress ipAdd = IPAddress.Parse(ipString);
+			int port = 6001;
+
+			this.listener_ = new TcpListener(ipAdd, port);
+			this.listener_.Start();
+
+			System.Threading.ThreadPool.QueueUserWorkItem(acceptTcpConnection);
 		}
 
 		// データの削除
@@ -32,11 +45,13 @@ namespace DistributionFileTransfer
 		// クライアント接続の受け入れ
 		private void acceptTcpConnection(object e)
 		{
+			
+			TcpClient client = this.listener_.AcceptTcpClient();
 			System.Threading.ThreadPool.QueueUserWorkItem(acceptTcpConnection);
-
+			Console.WriteLine("client connet");
 
 			// create tcp connecton
-			NetWorkContoroller master = new NetWorkContoroller(null);
+			NetWorkContoroller master = new NetWorkContoroller(client);
 
 			List<NetWorkContoroller> tcplist = new List<NetWorkContoroller>();
 			// 複数コネクションを作成
@@ -64,12 +79,15 @@ namespace DistributionFileTransfer
 				{
 					List<NetWorkContoroller> cnectList = this.clientList[key];
 
-					int cnt = n % cnectList.Count;
-					DataObject data = cnectList[cnt].getRcvMessage();
-					if (data != null)
+					if (cnectList.Count > 0)
 					{
-						this.receiver.setSendData(data);
-						n++;
+						int cnt = n % cnectList.Count;
+						DataObject data = cnectList[cnt].getRcvMessage();
+						if (data != null)
+						{
+							this.receiver.setSendData(data);
+							n++;
+						}
 					}
 				}
 				else

@@ -6,6 +6,7 @@ namespace DistributionFileTransfer
 	public class ServerComunicationManager :AComunicationManager
 	{
 		private NetWorkContoroller tcpClient;
+
 		public ServerComunicationManager(DataReceiverController receiver, string ip,int port)
 		{
 			this.isAct = true;
