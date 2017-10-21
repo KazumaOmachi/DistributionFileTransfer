@@ -40,13 +40,14 @@ namespace DistributionFileTransfer
 
 			lock (((ICollection)this.dataSenderList).SyncRoot)
 			{
-
+				/*
 				List<DataObject> cacheData = this.dataCache.getAllDataList();
 				foreach (DataObject data in cacheData)
 				{
 					// データの送信
 
 				}
+				*/
 			}
 				/*
 			this.dataSenderThread.Start();
@@ -87,7 +88,10 @@ namespace DistributionFileTransfer
 
 		public void setDataObject(DataObject data)
 		{
-			
+
+			Console.WriteLine("DataSender :set send data list");
+			this.dataQue.Enqueue(data);
+
 		}
 	}
 }

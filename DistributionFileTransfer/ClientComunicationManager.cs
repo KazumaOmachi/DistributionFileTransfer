@@ -10,14 +10,14 @@ namespace DistributionFileTransfer
 	public class ClientComunicationManager :AComunicationManager
 	{
 
-		private ConcurrentDictionary<string, List<NetWorkContoroller>> clientList;
+		private ConcurrentDictionary<int, List<NetWorkContoroller>> clientList;
 		private TcpListener listener_;
 
 
 		public ClientComunicationManager(DataReceiverController receiver)
 		{
 			this.receiver = receiver;
-			this.clientList = new ConcurrentDictionary<string, List<NetWorkContoroller>>();
+			this.clientList = new ConcurrentDictionary<int, List<NetWorkContoroller>>();
 		
 
 			// 
@@ -32,7 +32,7 @@ namespace DistributionFileTransfer
 		}
 
 		// データの削除
-		public void removeClient(string key)
+		public void removeClient(int key)
 		{
 			List<NetWorkContoroller> list = new List<NetWorkContoroller>();
 			clientList.TryRemove(key, out list);
@@ -53,15 +53,33 @@ namespace DistributionFileTransfer
 			// create tcp connecton
 			NetWorkContoroller master = new NetWorkContoroller(client);
 
+			int key = master.getPort();
+			string ip = master.getIp();
 			List<NetWorkContoroller> tcplist = new List<NetWorkContoroller>();
 			// 複数コネクションを作成
 			while (true)
 			{
+				// Console.WriteLine("wait get connection list ");
 				DataObject data = master.getRcvMessage();
-				break;
+				if (data != null)
+				{
+					Console.WriteLine(data.messageType + " / " + data.dataStr);
+					foreach (string portStr in data.dataStr.Split(','))
+					{
+						Console.WriteLine("port --> " + portStr);
+						int port = Int32.Parse(portStr);
+
+						Console.WriteLine("master ; " + ip + ":" + key + " /  conntect to " + ip + ":" + port);
+						TcpClient tcp = new TcpClient(ip, port);
+						tcplist.Add(new NetWorkContoroller(tcp));
+
+					}
+					break;
+				}
+				System.Threading.Thread.Sleep(1);
 				//tcplist.Add
 			}
-			string key = "";
+
 			this.clientList.TryAdd(key, tcplist);
 			System.Threading.ThreadPool.QueueUserWorkItem(dataReceverThread, key);
 
@@ -70,8 +88,8 @@ namespace DistributionFileTransfer
 		// データの受信オブジェクト
 		private void dataReceverThread(object e)
 		{
-			string key = e as string;
-
+			int key = (int)e;
+			Console.WriteLine("start Client connection. key : " + key);
 			int n = 0;
 			while (true)
 			{
@@ -79,16 +97,29 @@ namespace DistributionFileTransfer
 				{
 					List<NetWorkContoroller> cnectList = this.clientList[key];
 
-					if (cnectList.Count > 0)
+					if (cnectList.Count > 0 )
 					{
 						int cnt = n % cnectList.Count;
 						DataObject data = cnectList[cnt].getRcvMessage();
 						if (data != null)
 						{
+							data.key = key;
 							this.receiver.setSendData(data);
+						
+							if (data.messageType == MessageTypeEnum.FileFinish)
+							{
+								Console.WriteLine("finish this file transfer");
+								break;
+							}
+							else {
+								Console.WriteLine("Client data Recieve : " + data.key + " / " + data.seqNo + " / " + data.dataByte.Length);
+
+							}
 							n++;
 						}
 					}
+
+
 				}
 				else
 				{

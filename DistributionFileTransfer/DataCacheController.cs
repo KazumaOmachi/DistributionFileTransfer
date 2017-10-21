@@ -10,22 +10,34 @@ namespace DistributionFileTransfer
 {
 	public class DataCacheController
 	{
-		private ConcurrentDictionary<string, List<DataObject>> dataCache;
+		private ConcurrentDictionary<int, List<DataObject>> dataCache;
 
 		// コンストラクタ
 		public DataCacheController()
 		{
-			this.dataCache = new ConcurrentDictionary<string, List<DataObject>>();
+			this.dataCache = new ConcurrentDictionary<int, List<DataObject>>();
 		}
 
 		// キャッシュにセット
 		public void setDataCache(DataObject data)
 		{
+			Console.WriteLine("Data ccche set data");
+			try
+			{
+				if (!this.dataCache.ContainsKey(data.key))
+				{
+					Console.WriteLine("create new key");
+					List<DataObject> tmpObjList = new List<DataObject>();
+					this.dataCache.TryAdd(data.key, tmpObjList);
+				}
+				this.dataCache[data.key].Add(data);
+			}
+			catch { }
 
 		}
 
 		// ID指定でデータを取得する
-		public List<DataObject> getSingleDataList(string dataId) 
+		public List<DataObject> getSingleDataList(int dataId) 
 		{
 			List<DataObject> returnDataList = new List<DataObject>();
 			if (dataCache.ContainsKey(dataId))
@@ -36,12 +48,12 @@ namespace DistributionFileTransfer
 		}
 
 		// 全てのデータキャッシュを取得する
-		public List<DataObject> getAllDataList()
+		public List<DataObject> ggetAllDataList()
 		{
 			List<DataObject> returnDataList = new List<DataObject>();
 			lock (this)
 			{
-				foreach (string dataId in dataCache.Keys)
+				foreach (int dataId in dataCache.Keys)
 				{
 					returnDataList.AddRange(dataCache[dataId]);
 				}
@@ -52,8 +64,15 @@ namespace DistributionFileTransfer
 		// キャッシュデータのリセット
 		public void resetAllCacheData()
 		{
-			ConcurrentDictionary<string, List<DataObject>> tmp= new ConcurrentDictionary<string, List<DataObject>>();
+			ConcurrentDictionary<int, List<DataObject>> tmp= new ConcurrentDictionary<int, List<DataObject>>();
 			this.dataCache = tmp;
+		}
+
+		// キャッシュデータのリセット
+		public void removeCacheData(int key)
+		{
+			List<DataObject> rmCache = new List<DataObject>();
+			this.dataCache.TryRemove(key, out rmCache);
 		}
 
 	}

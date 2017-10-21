@@ -6,45 +6,119 @@ namespace DistributionFileTrasfer
 	public enum MessageTypeEnum
 	{
 		HB = 0,
-		ConnectList = 1
-		//Data = 1,
-		//Controll = 2
+		ConnectList = 10,
+		FileData = 11,
+		FileFinish = 12
 	}
 
-	// message when type is  1
-	/*
-	public enum DataMessageEnum
-	{
-		dataBody = 1,
-		finish = 2,
-		error = 3,
-	}
-	*/
 
 
 	public class DataObject
 	{
-
-		private string n;
-		private MessageTypeEnum messageType;
+		public MessageTypeEnum messageType;
 
 		// for data
-		private int key;
-		private byte[] dataByte;
-		//private string messageID;
-		//private string dataMessageType;
+		public int key = 0;
+		public int seqNo = 0;
+		public string dataStr;
+		public byte[] dataByte;
 
-		// for contorolle
-		//private string connectIP;
 
-		public DataObject() { }
-
-		public void setData(string n)
+		public DataObject(MessageTypeEnum msgTyp, string str) {
+			this.messageType = msgTyp;
+			if (msgTyp == MessageTypeEnum.ConnectList)
+			{
+				// クライアント　サーバのポートリスト
+				this.dataStr = str;
+			}
+		}
+		public DataObject(MessageTypeEnum msgTyp, int key)
 		{
-			this.n = n;
+			this.messageType = msgTyp;
+			if (msgTyp == MessageTypeEnum.FileFinish)
+			{
+				this.key = key;
+			}
+		}
+
+
+
+		public DataObject(MessageTypeEnum msgTyp, int key, int seqNo ,byte[] data)
+		{
+			this.messageType = msgTyp;
+			this.key = key;
+			this.seqNo = seqNo;
+			if (msgTyp == MessageTypeEnum.FileData)
+			{
+				// クライアント to サーバのファイルデータ
+				this.dataByte = data;
+			}
+		}
+
+		// コンストラクタ
+		public DataObject(byte[] data)
+		{
+			byte[] msgTypByte = new byte[4];
+			Array.Copy(data, 0, msgTypByte, 0, msgTypByte.Length);
+			int msgTypInt = BitConverter.ToInt32(msgTypByte, 0);
+			this.messageType = (MessageTypeEnum)Enum.ToObject(typeof(MessageTypeEnum), msgTypInt);
+
+			Console.WriteLine(this.messageType);
+			if (this.messageType == MessageTypeEnum.ConnectList)
+			{
+				byte[] strByte = new byte[data.Length - msgTypByte.Length];
+				Array.Copy(data, 4, strByte, 0, strByte.Length);
+				this.dataStr = System.Text.Encoding.ASCII.GetString(strByte);
+				Console.WriteLine("---> "+this.dataStr);
+			}
+			if (this.messageType == MessageTypeEnum.FileData)
+			{
+				byte[] keyByte = new byte[4];
+				Array.Copy(data, 4, keyByte, 0, keyByte.Length);
+				this.key = BitConverter.ToInt32(keyByte, 0);
+
+				byte[] seqNoByte = new byte[4];
+				Array.Copy(data, 8, seqNoByte, 0, seqNoByte.Length);
+				this.seqNo = BitConverter.ToInt32(seqNoByte, 0);
+
+				this.dataByte = new byte[data.Length - 12];
+				Array.Copy(data, 12, this.dataByte, 0, this.dataByte.Length);
+
+			}
+			if (this.messageType == MessageTypeEnum.FileFinish)
+			{
+				byte[] keyByte = new byte[4];
+				Array.Copy(data, 4, keyByte, 0, keyByte.Length);
+				this.key = BitConverter.ToInt32(keyByte, 0);
+
+			}
 
 		}
 
+		// 送信データに変換(object --> byte[])
+		public byte[] getSendData()
+		{
+			List<byte> sendData = new List<byte>();
+			sendData.AddRange(BitConverter.GetBytes((int)this.messageType));
+			if (this.messageType == MessageTypeEnum.ConnectList)
+			{
+				sendData.AddRange(System.Text.Encoding.ASCII.GetBytes(this.dataStr));
+
+			}
+			if (this.messageType == MessageTypeEnum.FileData)
+			{
+				sendData.AddRange(BitConverter.GetBytes(this.key));
+				sendData.AddRange(BitConverter.GetBytes(this.seqNo));
+				sendData.AddRange(this.dataByte);
+			}
+			if (this.messageType == MessageTypeEnum.FileFinish)
+			{
+				sendData.AddRange(BitConverter.GetBytes(this.key));
+			}
+			return sendData.ToArray();
+		}
+
+		/*
 		public byte[] getSendData()
 		{
 			List<byte> sendByte = new List<byte>();
@@ -69,14 +143,7 @@ namespace DistributionFileTrasfer
 			this.messageType = MessageTypeEnum.ConnectList;
 			this.dataByte = System.Text.Encoding.ASCII.GetBytes(portList);
 		}
-
-		public DataObject byteToDataObjec(byte[] dataByte)
-		{
-			DataObject data = new DataObject();
-
-
-			return data;	
-		}
+		*/
 
 
 

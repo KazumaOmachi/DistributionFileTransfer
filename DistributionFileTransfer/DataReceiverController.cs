@@ -39,15 +39,18 @@ namespace DistributionFileTransfer
 			//if (this.dataList.TryDequeue(out data))
 			if ( data != null)
 			{
-				// データの送信
-				this.dataSender.setDataObject(data);
+				if (data.messageType == MessageTypeEnum.FileData 
+				    || data.messageType == MessageTypeEnum.FileFinish)
+				{
+					// データの送信
+					this.dataSender.setDataObject(data);
 
-				// キャッシュへ登録
-				this.dataCache.setDataCache(data);
+					// キャッシュへ登録
+					this.dataCache.setDataCache(data);
 
-				// ファイルの出力
-				this.fileExport.setFileData(data);
-
+					// ファイルの出力
+					this.fileExport.setFileData(data);
+				}
 			}
 			//System.Threading.Thread.Sleep(10);
 			//}

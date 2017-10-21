@@ -16,6 +16,8 @@ namespace ClientFileTransfer
 
 		public void run(string filePath)
 		{
+			int portCnt = 3;
+			int fileSplitCnt = 5;
 
 			if (System.IO.File.Exists(filePath))
 			{
@@ -39,13 +41,48 @@ namespace ClientFileTransfer
 				fs.Close();
 
 				Console.WriteLine("file read : " + bs.Length + "(byte)");
+				// 送信
+				double doubleSendSize = Convert.ToDouble( bs.Length) / Convert.ToDouble( fileSplitCnt) ;
+				double roundSendSize = Math.Round(doubleSendSize, MidpointRounding.AwayFromZero);
+				int sendBaseSize = Convert.ToInt32(roundSendSize);
+				Console.WriteLine("Send Base size (byte) : " + sendBaseSize);
 
-				Console.WriteLine(fs);
+				DataObject[] splitFileList = new DataObject[fileSplitCnt];
+				int setSize = 0;
+				for (int num = 0; num < splitFileList.Length; num++)
+				{
+					// 送信サイズの決定
+					int sendSize = Math.Min(bs.Length - setSize, sendBaseSize);
+					Console.WriteLine("size ---> " + sendSize);
+					byte[] splitData = new byte[sendSize];
+					Array.Copy(bs, setSize, splitData, 0, sendSize);
+					setSize += sendSize;
+					splitFileList[num] = new DataObject(MessageTypeEnum.FileData, 0, num, splitData);
+
+				}
+
+				// -- Debug --
+				/*
+				int n = 0;
+				foreach (DataObject doe in splitFileList){
+					Console.WriteLine("seq no : "+ doe.seqNo +" / "+ doe.dataByte.Length);
+					n += doe.dataByte.Length;
+				}
+
+				Console.WriteLine("compare size : " + n + "(send) / " + bs.Length + "(origin)");
+				*/
+				// -----------
+
+				// Console.WriteLine(fs);
+				// 分割・データの作成
+
+
+
 
 				// サーバへの接続
 				try
 				{
-					string ip = "127.0.0.1"; 
+					string ip = "127.0.0.1";
 					int port = 6001;
 					Console.WriteLine("conntect to " + ip + ":" + port);
 					TcpClient tcp = new TcpClient(ip, port);
@@ -57,7 +94,6 @@ namespace ClientFileTransfer
 
 
 					// コネクション用ポートの開始
-					int portCnt = 3;
 					this.opnPortList = new int[portCnt];
 					this.tcpList = new NetWorkContoroller[portCnt];
 					for (int i = 0; i < portCnt; i++)
@@ -69,26 +105,29 @@ namespace ClientFileTransfer
 					string portList = getStartPortList(portCnt);
 
 
-					Console.WriteLine("port data list : " + portList );
-					DataObject data = new DataObject();
-					data.setData(portList);
+					Console.WriteLine("port data list : " + portList);
+					DataObject data = new DataObject(MessageTypeEnum.ConnectList, portList);
 					masterConnection.setSndMessage(data);
 
 					connectionStartCheck(portCnt);
 
 
-
-					// 分割・データの作成
-
-
-
-					// TCPの複数ポート作成
-
-
-
-
+					// データの送信
+					int num = 0;
+					lock (((ICollection)this.opnPortList).SyncRoot)
+					{
+						foreach (DataObject sendData in splitFileList)
+						{
+							tcpList[num % portCnt].setSndMessage(sendData);
+							num++;
+						}
+					}
+					DataObject fileFinish = new DataObject(MessageTypeEnum.FileFinish, 0);
+					//num++;
+					tcpList[num % portCnt].setSndMessage(fileFinish);
 
 					// 接続待ち（サーバから複数接続）
+					disconnectionStartCheck();
 
 					// 終了まち・タイムアウト設定
 
@@ -110,12 +149,12 @@ namespace ClientFileTransfer
 		// サーバからの複数接続まち
 		private void startMultiConnection(object e)
 		{
-			int index = (int)e ;
+			int index = (int)e;
 			Console.WriteLine("start index " + index);
 			string ipString = "0.0.0.0";
 			IPAddress ipAdd = IPAddress.Parse(ipString);
 
-			TcpListener listener = new TcpListener(ipAdd, 0 );
+			TcpListener listener = new TcpListener(ipAdd, 0);
 			listener.Start();
 
 			int port = ((IPEndPoint)listener.LocalEndpoint).Port;
@@ -124,7 +163,8 @@ namespace ClientFileTransfer
 			{
 				this.opnPortList[index] = port;
 			}
-			TcpClient client  = listener.AcceptTcpClient();
+			TcpClient client = listener.AcceptTcpClient();
+			Console.WriteLine("server connected");
 			lock (((ICollection)this.tcpList).SyncRoot)
 			{
 				this.tcpList[index] = new NetWorkContoroller(client);
@@ -168,32 +208,62 @@ namespace ClientFileTransfer
 		// コネクションのチェック
 		private void connectionStartCheck(int portCnt)
 		{
-								// コネクションチェッック
-					while (true)
+			// コネクションチェッック
+			while (true)
+			{
+				//Console.WriteLine("connection check");
+				int cnnctCnt = 0;
+				lock (((ICollection)this.tcpList).SyncRoot)
+				{
+					foreach (NetWorkContoroller nwCtn in this.tcpList)
 					{
-						Console.WriteLine("connection check");
-						int cnnctCnt = 0;
-						lock (((ICollection)this.tcpList).SyncRoot)
+						if (nwCtn != null)
 						{
-							foreach (NetWorkContoroller nwCtn in this.tcpList)
+							if (nwCtn.getStatus())
 							{
-								if (nwCtn != null)
-								{
-									if (nwCtn.getStatus())
-									{
-										// コネクションカウント
-										cnnctCnt++;
-									}
-}
+								// コネクションカウント
+								cnnctCnt++;
 							}
 						}
-						Console.WriteLine("connection count : " + cnnctCnt);
-						if (cnnctCnt == portCnt)
-						{
-							break;
-						}
-						System.Threading.Thread.Sleep(1000);
 					}
+				}
+				//Console.WriteLine("connection count : " + cnnctCnt);
+				if (cnnctCnt == portCnt)
+				{
+					break;
+				}
+				System.Threading.Thread.Sleep(10);
+			}
+			Console.WriteLine("connected all connection");
+		}
+
+		// コネクションのチェック
+		private void disconnectionStartCheck()
+		{
+			while (true)
+			{
+				int clsCnt = 0;
+				lock (((ICollection)this.tcpList).SyncRoot)
+				{
+					foreach (NetWorkContoroller nwCtn in this.tcpList)
+					{
+						if (!nwCtn.getStatus())
+						{
+							clsCnt++;
+						}
+					}
+				}
+				lock (((ICollection)this.tcpList).SyncRoot)
+				{
+					if (this.tcpList.Length == clsCnt)
+					{
+						Console.WriteLine("All sesstion disconnect");
+						break;
+					}
+				}
+				System.Threading.Thread.Sleep(10);
+			}
+
 		}
 	}
 }
