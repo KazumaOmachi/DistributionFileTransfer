@@ -4,6 +4,9 @@ using DistributionFileTrasfer;
 using System.Collections.Generic;
 using System.Collections;
 
+using System.Net.Sockets;
+using System.Net;
+
 namespace DistributionFileTransfer
 {
 	public class DataSenderController
@@ -14,18 +17,29 @@ namespace DistributionFileTransfer
 		private List<NetWorkContoroller> dataSenderList;
 		private bool isAct;
 
-		public DataSenderController(DataCacheController dataCache)
+		private TcpListener listener_;
+
+		public DataSenderController(DataCacheController dataCache , int port)
 		{
 			this.isAct = true;
 			this.dataCache = dataCache;
 			this.dataSenderList = new List<NetWorkContoroller>();
 			this.dataQue = new ConcurrentQueue<DataObject>();
 
-			this.dataSenderThread = new System.Threading.Thread(dataSenderThreadAction);
-			this.dataSenderThread.Start();
+			string ipString = "0.0.0.0";
+			IPAddress ipAdd = IPAddress.Parse(ipString);
+
+			this.listener_ = new TcpListener(ipAdd, port);
+			this.listener_.Start();
+
 
 			// TCP Listenerの起動
 			System.Threading.ThreadPool.QueueUserWorkItem(acceptTcpConnection);
+
+			// データ送信スレッドの起動
+			this.dataSenderThread = new System.Threading.Thread(dataSenderThreadAction);
+			this.dataSenderThread.Start();
+
 
 		}
 
@@ -35,23 +49,27 @@ namespace DistributionFileTransfer
 			// 
 			if (this.isAct)
 			{
+
+				TcpClient client = this.listener_.AcceptTcpClient();
+
+				// create tcp connecton
+				NetWorkContoroller dataSender = new NetWorkContoroller(client);
 				System.Threading.ThreadPool.QueueUserWorkItem(acceptTcpConnection);
-			}
 
-			lock (((ICollection)this.dataSenderList).SyncRoot)
-			{
-				/*
-				List<DataObject> cacheData = this.dataCache.getAllDataList();
-				foreach (DataObject data in cacheData)
+
+				lock (((ICollection)this.dataSenderList).SyncRoot)
 				{
-					// データの送信
-
+					// 新規コネクションに対してキャッシュデータの送信
+					List<DataObject> cacheData = this.dataCache.getAllDataList();
+					foreach (DataObject data in cacheData)
+					{
+						// データの送信
+						dataSender.setSndMessage(data);
+					}
+					// 送信先リストに追加
+					this.dataSenderList.Add(dataSender);
 				}
-				*/
 			}
-				/*
-			this.dataSenderThread.Start();
-			*/
 		}
 
 
@@ -59,11 +77,13 @@ namespace DistributionFileTransfer
 		// データ送信用のスレッド
 		private void dataSenderThreadAction(object e)
 		{
+			Console.WriteLine("start data sender thread ");
 			while (this.isAct)
 			{
 				DataObject data;
 				if (this.dataQue.TryDequeue(out data))
 				{
+					Console.WriteLine("Send data key : " + data.key);
 					lock (((ICollection)this.dataSenderList).SyncRoot)
 					{
 						foreach (NetWorkContoroller tcpClient in this.dataSenderList)

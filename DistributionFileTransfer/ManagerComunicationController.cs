@@ -69,7 +69,8 @@ namespace DistributionFileTransfer
 			}
 			else
 			{
-				startClietCommunication();
+				int port = 0;
+				startClietCommunication(port);
 			}
 
 			this.dataReceiveThread = new System.Threading.Thread(this.comManag.dataReceivThreadAction);
@@ -86,10 +87,10 @@ namespace DistributionFileTransfer
 		}
 
 		// クライアントプロセスの初期化
-		public void startClietCommunication()
+		public void startClietCommunication(int port)
 		{
 			// クライアントプロセス用
-			this.comManag = new ClientComunicationManager(this.dataReciv);
+			this.comManag = new ClientComunicationManager(this.dataReciv, port);
 		}
 	}
 }

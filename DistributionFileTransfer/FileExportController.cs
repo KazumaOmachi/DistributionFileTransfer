@@ -8,140 +8,59 @@ namespace DistributionFileTransfer
 {
 	public class FileExportController
 	{
-		// private ConcurrentQueue<DataObject> dataQueue;
-
-		private ConcurrentDictionary<int, FileStream> fileDictionary;
-		private ConcurrentDictionary<int, List<byte>> fileByteCache;
-		private ConcurrentDictionary<int, int> filePoint;
-
-		public FileExportController()
-		{
-			this.fileDictionary = new ConcurrentDictionary<int, FileStream>();
-			this.filePoint = new ConcurrentDictionary<int, int>();
-
-			this.fileByteCache = new ConcurrentDictionary<int, List<byte>>();
-			//this.dataQueue = new ConcurrentQueue<DataObject>();
-			//ystem.Threading.ThreadPool.QueueUserWorkItem(fileExportThread);
-		}
-
-		public void setFileData2(DataObject data)
-		{
-			if (data.messageType == MessageTypeEnum.FileFinish)
-			{
-				//removeFile(data.key);
-
-				// -- Test --
-				Console.WriteLine("FileManager :Finish message recieve");
-				int myPid = System.Diagnostics.Process.GetCurrentProcess().Id;
-				string basePath = @"/tmp/" + myPid;
-				if (!System.IO.Directory.Exists(basePath))
-				{
-					Console.WriteLine("create process dictionary");
-					System.IO.Directory.CreateDirectory(basePath);
-				}
-				string filePath = basePath + "/" + data.key + ".txt";
-				FileStream fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-				byte[] fileDataByte = this.fileByteCache[data.key].ToArray();
-				Console.WriteLine("write file size : " + fileDataByte.Length);
-				foreach (byte d in fileDataByte)
-				{
-					Console.Write(d + " ");
-				}
-				Console.WriteLine();
-				fs.Write(fileDataByte, 0, fileDataByte.Length);
-				fs.Close();
-			}
-			else if (data.messageType == MessageTypeEnum.FileData)
-			{
-				lock (this)
-				{
-					if (!this.fileByteCache.ContainsKey(data.key))
-					{
-						List<byte> tmp = new List<byte>();
-						this.fileByteCache.TryAdd(data.key, tmp);
-					}
-					this.fileByteCache[data.key].AddRange(data.dataByte);
-				}
-			}
+		private ConcurrentDictionary<int, List<byte>> fileDataCache;
+		              
+		public FileExportController() {
+			this.fileDataCache = new ConcurrentDictionary<int, List<byte>>();
 		}
 
 		public void setFileData(DataObject data)
 		{
+			//this.fileDataQueue.Enqueue(data);
+			if (!this.fileDataCache.ContainsKey(data.key))
+			{
+				Console.WriteLine("Recieve New Key : " + data.key);
+				this.fileDataCache.TryAdd(data.key, new List<byte>());
+			}
 			if (data.messageType == MessageTypeEnum.FileData)
 			{
-				// ファイルの保存先
-				int myPid = System.Diagnostics.Process.GetCurrentProcess().Id;
-				string basePath = @"/tmp/" + myPid;
-				if (!System.IO.Directory.Exists(basePath))
-				{
-					Console.WriteLine("create process dictionary");
-					System.IO.Directory.CreateDirectory(basePath);
-				}
-
-				if (!this.fileDictionary.ContainsKey(data.key))
-				{
-					string filePath = basePath + "/" + data.key + ".txt";
-					FileStream fs = new FileStream(filePath, FileMode.Append, FileAccess.Write);
-					fs.Write(data.dataByte, 0, data.dataByte.Length);
-					fs.Close();
-					// this.fileDictionary.TryAdd(data.key, fs);
-
-				}
+				Console.WriteLine("Add File data byte. key : " + data.key + " / size : " + data.dataByte.Length);
+				this.fileDataCache[data.key].AddRange(data.dataByte);
 			}
-		}
-
-
-					/*
-					if (!this.filePoint.ContainsKey(data.key))
-					{
-						this.filePoint.TryAdd(data.key, 0);
-					}
-					int point = this.filePoint[data.key];
-					Console.WriteLine("File Transfer size : " + data.dataByte.Length);
-					this.fileDictionary[data.key].Write(data.dataByte, 0, data.dataByte.Length);
-					this.filePoint[data.key] += data.dataByte.Length;
-
-				}
-			}
-
-		}
-		*/
-
-		public void removeFile(int key)
-		{
-			Console.WriteLine("finish file create : " + key);
-			lock(this)
+			else if (data.messageType == MessageTypeEnum.FileFinish)
 			{
-				if (this.fileDictionary.ContainsKey(key))
-				{
-					this.fileDictionary[key].Close();
-					FileStream fs;
-					this.fileDictionary.TryRemove(key, out fs);
-				}
-				if (this.filePoint.ContainsKey(key))
-				{
-					int rm = 0;
-					this.filePoint.TryRemove(key, out rm);
-				}
+				// 終了
+				Console.WriteLine("Finish Created file. key : "+ data.key);
+				System.Threading.ThreadPool.QueueUserWorkItem(createFileThread, data.key);
 			}
 		}
 
-
-
-		// ファイルのエクスポートの実施（シングルに一度Queuing）
-		/*
-		private void fileExportThread(object e)
+		// ファイル作成
+		private void createFileThread(object e)
 		{
-			DataObject data;
-			if (this.dataQueue.TryDequeue(out data))
+			int key = (int)e;
+			Console.WriteLine("start create file ");
+
+			List<byte> dataList;
+			this.fileDataCache.TryRemove(key, out dataList);
+			byte[] dataByte = dataList.ToArray();
+
+			// ファイルの保存先
+			int myPid = System.Diagnostics.Process.GetCurrentProcess().Id;
+			string basePath = @"/tmp/" + myPid;
+			if (!System.IO.Directory.Exists(basePath))
 			{
-				// ファイルの作成処理
+				Console.WriteLine("create process dictionary");
+				System.IO.Directory.CreateDirectory(basePath);
 			}
-			System.Threading.ThreadPool.QueueUserWorkItem(fileExportThread);
 
+			string filePath = basePath + "/" + key + ".txt";
+			Console.WriteLine("create file key : " + key + " / file path : " + filePath);
+			FileStream fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+			fs.Write(dataByte, 0, dataByte.Length);
+			Console.WriteLine("finish create file ");
+			fs.Close();
 		}
-		*/
-
 
 	}
 }

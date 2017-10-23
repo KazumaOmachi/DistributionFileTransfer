@@ -30,7 +30,15 @@ namespace DistributionFileTransfer
 					List<DataObject> tmpObjList = new List<DataObject>();
 					this.dataCache.TryAdd(data.key, tmpObjList);
 				}
-				this.dataCache[data.key].Add(data);
+				if (data.messageType == MessageTypeEnum.FileData)
+				{
+					this.dataCache[data.key].Add(data);
+				}
+				if (data.messageType == MessageTypeEnum.FileFinish)
+				{
+					List<DataObject> rmlistObj;
+					this.dataCache.TryRemove(data.key, out rmlistObj);
+				}
 			}
 			catch { }
 
@@ -48,7 +56,7 @@ namespace DistributionFileTransfer
 		}
 
 		// 全てのデータキャッシュを取得する
-		public List<DataObject> ggetAllDataList()
+		public List<DataObject> getAllDataList()
 		{
 			List<DataObject> returnDataList = new List<DataObject>();
 			lock (this)

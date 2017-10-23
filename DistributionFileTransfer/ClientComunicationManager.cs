@@ -14,7 +14,7 @@ namespace DistributionFileTransfer
 		private TcpListener listener_;
 
 
-		public ClientComunicationManager(DataReceiverController receiver)
+		public ClientComunicationManager(DataReceiverController receiver, int port)
 		{
 			this.receiver = receiver;
 			this.clientList = new ConcurrentDictionary<int, List<NetWorkContoroller>>();
@@ -23,7 +23,7 @@ namespace DistributionFileTransfer
 			// 
 			string ipString = "0.0.0.0";
 			IPAddress ipAdd = IPAddress.Parse(ipString);
-			int port = 6001;
+			//int port = 6001;
 
 			this.listener_ = new TcpListener(ipAdd, port);
 			this.listener_.Start();
