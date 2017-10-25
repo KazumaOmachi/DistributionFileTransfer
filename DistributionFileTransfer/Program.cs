@@ -32,7 +32,7 @@ namespace DistributionFileTransfer
 			DataSenderController sender = new DataSenderController(cache, recievePort);
 			DataReceiverController receiver = new DataReceiverController(cache, fileCtl, sender);
 
-			ManagerComunicationController manager = new ManagerComunicationController(receiver,cache,fileCtl,sender);
+			ManagerComunicationController manager = new ManagerComunicationController(receiver,cache,fileCtl,sender, 6901);
 
 			/* Debug */
 			// クライアント用ポートの設定

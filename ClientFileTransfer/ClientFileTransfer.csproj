@@ -41,6 +41,7 @@
     <Compile Include="..\DistributionFileTransfer\DataObject.cs">
       <Link>DataObject.cs</Link>
     </Compile>
+    <Compile Include="MultiConectionManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

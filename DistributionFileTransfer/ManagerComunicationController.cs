@@ -1,6 +1,11 @@
 ﻿using System;
 using DistributionFileTrasfer;
 
+using System.Net.Sockets;
+using System.Net;
+using System.Collections.Generic;
+using System.Collections;
+
 namespace DistributionFileTransfer
 {
 	public class ManagerComunicationController
@@ -15,12 +20,15 @@ namespace DistributionFileTransfer
 		private DataReceiverController dataReciv;
 		private DataSenderController dataSend;
 
-		private NetWorkContoroller managent;
+		private List<NetWorkContoroller> managentList;
+		private TcpListener listener_;
+
 
 		public ManagerComunicationController(DataReceiverController dataReciv, 
 		                                     DataCacheController dataCache,
 		                                     FileExportController fileExport,
-		                                     DataSenderController dataSend
+		                                     DataSenderController dataSend,
+		                                     int port
 		                                     )
 
 		{
@@ -30,19 +38,35 @@ namespace DistributionFileTransfer
 			this.dataSend = dataSend;
 
 			this.comManag = new AComunicationManager();
+
+			this.managentList = new List<NetWorkContoroller>();
 			// dataReceiveThreadの初期化
 			this.dataReceiveThread = new System.Threading.Thread(this.comManag.dataReceivThreadAction);
 
+			// 
+			string ipString = "0.0.0.0";
+			IPAddress ipAdd = IPAddress.Parse(ipString);
+			//int port = 6001;
 
+			this.listener_ = new TcpListener(ipAdd, port);
+			this.listener_.Start();
 
 			// management受け入れのスレッドの起動
 			System.Threading.ThreadPool.QueueUserWorkItem(acceptManagemet);
 		}
 
 
+		// マネージャプロセウスの接続
 		private void acceptManagemet(object e)
 		{
-			System.Threading.Thread.Sleep(1000);
+			TcpClient client = this.listener_.AcceptTcpClient();
+			NetWorkContoroller managent = new NetWorkContoroller(client);
+			lock (((ICollection)this.managentList).SyncRoot)
+
+			{
+				this.managentList.Add(managent);
+			}
+			System.Threading.Thread.Sleep(10);
 			System.Threading.ThreadPool.QueueUserWorkItem(acceptManagemet);
 		}
 

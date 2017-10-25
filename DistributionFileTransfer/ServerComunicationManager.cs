@@ -33,8 +33,6 @@ namespace DistributionFileTransfer
 					Console.WriteLine("connction filed");
 				}
 			}
-
-	
 		}
 
 		// データの受信と送信
