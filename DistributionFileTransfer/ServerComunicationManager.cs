@@ -29,6 +29,7 @@ namespace DistributionFileTransfer
 				}
 				catch
 				{
+					this.isAct = false;
 					System.Threading.Thread.Sleep(1000);
 					Console.WriteLine("connction filed");
 				}

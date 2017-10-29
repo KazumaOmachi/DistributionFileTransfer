@@ -11,6 +11,7 @@ namespace DistributionFileTransfer
 
 			/* Debug */
 			// server -> server
+			/*
 			int connectPort;
 			int recievePort;
 			if (args.Length > 0)
@@ -23,7 +24,8 @@ namespace DistributionFileTransfer
 				connectPort = -1; // for Client
 				recievePort = 6501;
 			}
-
+			*/
+			int recievePort = 6501;
 
 
 			FileExportController fileCtl = new FileExportController();
@@ -36,7 +38,7 @@ namespace DistributionFileTransfer
 
 			/* Debug */
 			// クライアント用ポートの設定
-
+			/*
 			if (connectPort > 0)
 			{
 				// 接続先IPポートを設定
@@ -47,6 +49,7 @@ namespace DistributionFileTransfer
 				manager.startClietCommunication(6001);
 
 			}
+			*/
 		}
 	}
 }

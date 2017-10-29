@@ -18,18 +18,27 @@ namespace DistributionFileTransfer
 		{
 			this.receiver = receiver;
 			this.clientList = new ConcurrentDictionary<int, List<NetWorkContoroller>>();
-		
+			this.isAct = true;
 
-			// 
-			string ipString = "0.0.0.0";
-			IPAddress ipAdd = IPAddress.Parse(ipString);
-			//int port = 6001;
+			try
+			{
+				// 
+				string ipString = "0.0.0.0";
+				IPAddress ipAdd = IPAddress.Parse(ipString);
+				//int port = 6001;
 
-			this.listener_ = new TcpListener(ipAdd, port);
-			this.listener_.Start();
+				this.listener_ = new TcpListener(ipAdd, port);
+				this.listener_.Start();
 
-			System.Threading.ThreadPool.QueueUserWorkItem(acceptTcpConnection);
+				System.Threading.ThreadPool.QueueUserWorkItem(acceptTcpConnection);
+			}
+			catch
+			{
+				this.isAct = false;
+			}
 		}
+
+
 
 		// データの削除
 		public void removeClient(int key)

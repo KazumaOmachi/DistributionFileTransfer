@@ -8,7 +8,20 @@ namespace DistributionFileTrasfer
 		HB = 0,
 		ConnectList = 10,
 		FileData = 11,
-		FileFinish = 12
+		FileFinish = 12,
+
+		ConnectInf = 20,
+		GetConnectStatus = 21,
+		OKConnected = 22,
+		ConnectFail = 23,
+
+		GetFinishDataList = 31,
+		ReturnFinishDataList = 32,
+
+		DeleteFileData = 41,
+		DeleteMassageSend = 42,
+		DeleteMassageMissed = 43,
+
 	}
 
 
@@ -21,12 +34,18 @@ namespace DistributionFileTrasfer
 		public int key = 0;
 		public int seqNo = 0;
 		public string dataStr;
+		public int dataInt;
 		public byte[] dataByte;
 
+		public DataObject(MessageTypeEnum msgTyp)
+		{
+			this.messageType = msgTyp;
+
+		}
 
 		public DataObject(MessageTypeEnum msgTyp, string str) {
 			this.messageType = msgTyp;
-			if (msgTyp == MessageTypeEnum.ConnectList)
+			if (msgTyp == MessageTypeEnum.ConnectList || msgTyp == MessageTypeEnum.ConnectInf)
 			{
 				// クライアント　サーバのポートリスト
 				this.dataStr = str;
@@ -64,7 +83,7 @@ namespace DistributionFileTrasfer
 			this.messageType = (MessageTypeEnum)Enum.ToObject(typeof(MessageTypeEnum), msgTypInt);
 
 			Console.WriteLine(this.messageType);
-			if (this.messageType == MessageTypeEnum.ConnectList)
+			if (this.messageType == MessageTypeEnum.ConnectList|| this.messageType == MessageTypeEnum.ConnectInf)
 			{
 				byte[] strByte = new byte[data.Length - msgTypByte.Length];
 				Array.Copy(data, 4, strByte, 0, strByte.Length);
@@ -100,7 +119,7 @@ namespace DistributionFileTrasfer
 		{
 			List<byte> sendData = new List<byte>();
 			sendData.AddRange(BitConverter.GetBytes((int)this.messageType));
-			if (this.messageType == MessageTypeEnum.ConnectList)
+			if (this.messageType == MessageTypeEnum.ConnectList|| this.messageType == MessageTypeEnum.ConnectInf)
 			{
 				sendData.AddRange(System.Text.Encoding.ASCII.GetBytes(this.dataStr));
 

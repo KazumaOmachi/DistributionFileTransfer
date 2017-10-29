@@ -19,9 +19,21 @@ namespace DistributionFileTransfer
 			}
 		}
 
+		public bool getStatus()
+		{
+			bool rtStasut = true;
+
+			lock (this)
+			{
+				rtStasut = this.isAct;
+			}
+			return rtStasut;
+		}
+
 		public void dataReceivThreadAction(object e)
 		{
 			
 		}
+
 	}
 }

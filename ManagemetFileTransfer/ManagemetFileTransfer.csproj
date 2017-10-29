@@ -34,9 +34,6 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="..\DistributionFileTransfer\TcpNetWork.cs">
-      <Link>TcpNetWork.cs</Link>
-    </Compile>
     <Compile Include="ServerManagementController.cs" />
     <Compile Include="..\DistributionFileTransfer\NetWorkContoroller.cs">
       <Link>NetWorkContoroller.cs</Link>
@@ -44,6 +41,8 @@
     <Compile Include="..\DistributionFileTransfer\DataObject.cs">
       <Link>DataObject.cs</Link>
     </Compile>
+    <Compile Include="ServerNodeManager.cs" />
+    <Compile Include="ServerGroupController.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

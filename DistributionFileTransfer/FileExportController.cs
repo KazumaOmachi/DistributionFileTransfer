@@ -3,15 +3,18 @@ using DistributionFileTrasfer;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace DistributionFileTransfer
 {
 	public class FileExportController
 	{
 		private ConcurrentDictionary<int, List<byte>> fileDataCache;
+		private List<int> finishKeyList;
 		              
 		public FileExportController() {
 			this.fileDataCache = new ConcurrentDictionary<int, List<byte>>();
+			this.finishKeyList = new List<int>();
 		}
 
 		public void setFileData(DataObject data)
@@ -30,10 +33,39 @@ namespace DistributionFileTransfer
 			else if (data.messageType == MessageTypeEnum.FileFinish)
 			{
 				// 終了
-				Console.WriteLine("Finish Created file. key : "+ data.key);
+				Console.WriteLine("Finish Created file. key : " + data.key);
 				System.Threading.ThreadPool.QueueUserWorkItem(createFileThread, data.key);
+				lock (((ICollection)this.finishKeyList).SyncRoot)
+				{
+					this.finishKeyList.Add(data.key);
+				}
 			}
 		}
+
+		public string getFinishKeyList()
+		{
+			string keyList = "";
+			lock (((ICollection)this.finishKeyList).SyncRoot)
+			{
+				keyList = string.Join("," ,this.finishKeyList);
+			}
+			return keyList;
+		}
+
+		public void deleteKeyData(int deleteKey)
+		{
+			lock (((ICollection)this.finishKeyList).SyncRoot)
+			{
+				foreach (int key in this.finishKeyList)
+				{
+					if (key == deleteKey)
+					{
+						this.finishKeyList.Remove(key);
+					}
+				}
+			}
+		}
+
 
 		// ファイル作成
 		private void createFileThread(object e)

@@ -41,7 +41,7 @@ namespace DistributionFileTransfer
 
 			this.managentList = new List<NetWorkContoroller>();
 			// dataReceiveThreadの初期化
-			this.dataReceiveThread = new System.Threading.Thread(this.comManag.dataReceivThreadAction);
+			//this.dataReceiveThread = new System.Threading.Thread(this.comManag.dataReceivThreadAction);
 
 			// 
 			string ipString = "0.0.0.0";
@@ -61,22 +61,95 @@ namespace DistributionFileTransfer
 		{
 			TcpClient client = this.listener_.AcceptTcpClient();
 			NetWorkContoroller managent = new NetWorkContoroller(client);
-			lock (((ICollection)this.managentList).SyncRoot)
+			System.Threading.ThreadPool.QueueUserWorkItem(acceptManagemet);
 
+			lock (((ICollection)this.managentList).SyncRoot)
 			{
 				this.managentList.Add(managent);
 			}
-			System.Threading.Thread.Sleep(10);
-			System.Threading.ThreadPool.QueueUserWorkItem(acceptManagemet);
+
 		}
 
 		// 
 		private void dataManagementThreadAction(object e)
 		{
+			lock (((ICollection)this.managentList).SyncRoot)
+			{
+				foreach (NetWorkContoroller manager in this.managentList)
+				{
+					if (manager.getStatus())
+					{
+						DataObject data = manager.getRcvMessage();
+
+						// 変装用メッセージ
+
+						DataObject rcData = new DataObject(MessageTypeEnum.HB);
+						// 分岐
+						// 接続情報の受信（サーバへのコネクト確立・クライアント解放）
+						if (data.messageType == MessageTypeEnum.ConnectInf)
+						{
+							string[] dataStrList = data.dataStr.Split(':');
+							string ip = dataStrList[0];
+							int port = Int32.Parse(dataStrList[1]);
+							setDataReceiveThreadStarter(ip, port);
+							if (this.comManag.getStatus())
+							{
+								rcData = new DataObject(MessageTypeEnum.OKConnected);
+							}
+							else {
+								rcData = new DataObject(MessageTypeEnum.ConnectFail);
+							}
+						}
+
+						// コネクション状況の返答
+						else if (data.messageType == MessageTypeEnum.GetConnectStatus)
+						{
+							if (this.comManag.getStatus())
+							{
+								rcData = new DataObject(MessageTypeEnum.OKConnected);
+							}
+							else {
+								rcData = new DataObject(MessageTypeEnum.ConnectFail);
+							}
+						}
+						// 終了いるファイルリスト
+						else if (data.messageType == MessageTypeEnum.GetFinishDataList)
+						{
+							rcData = new DataObject(MessageTypeEnum.ReturnFinishDataList, this.fileExport.getFinishKeyList());
+
+						}
+
+						// クライアント切断
+						else if (data.messageType == MessageTypeEnum.DeleteFileData)
+						{
+							if (this.comManag.GetType() == typeof(ClientComunicationManager))
+							{
+								ClientComunicationManager tmpClientCon = this.comManag as ClientComunicationManager;
+								tmpClientCon.removeClient(data.dataInt);
+								this.dataReciv.setSendData(data);
+								rcData = new DataObject(MessageTypeEnum.DeleteMassageSend);
+							}
+							else {
+								rcData = new DataObject(MessageTypeEnum.DeleteMassageMissed);
+							}
+						}
+
+
+						manager.setSndMessage(rcData);
+
+						//
+					}
+					else
+					{
+						this.managentList.Remove(manager);
+					}
+				}
+			}
+			System.Threading.Thread.Sleep(10);
 
 		}
 
-		public void setDataReceiveThreadStarter(bool stat)
+		public void setDataReceiveThreadStarter(string ip , int port )
 		{
 			while (this.dataReceiveThread.IsAlive)
 			{
@@ -84,17 +157,15 @@ namespace DistributionFileTransfer
 				System.Threading.Thread.Sleep(10);
 			}
 
-			if (stat)
+			if (ip == "client")
 			{
-				// サーバプロセス用
-				string ip = "";
-				int port = 0;
-				startServerComumnication(ip, port);
+				startClietCommunication(port);
+
 			}
 			else
 			{
-				int port = 0;
-				startClietCommunication(port);
+				// サーバプロセス用
+				startServerComumnication(ip, port);
 			}
 
 			this.dataReceiveThread = new System.Threading.Thread(this.comManag.dataReceivThreadAction);

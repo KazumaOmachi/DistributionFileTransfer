@@ -27,17 +27,28 @@ namespace DistributionFileTransfer
 			{
 				lock (this)
 				{
+					// データの送信
+					this.dataSender.setDataObject(data);
+
 					if (data.messageType == MessageTypeEnum.FileData
 						|| data.messageType == MessageTypeEnum.FileFinish)
 					{
 						// データの送信
-						this.dataSender.setDataObject(data);
+						// this.dataSender.setDataObject(data);
 
 						// キャッシュへ登録
 						this.dataCache.setDataCache(data);
 
 						// ファイルの出力
 						this.fileExport.setFileData(data);
+					}
+					else if (data.messageType == MessageTypeEnum.DeleteFileData)
+					{
+						// キャッシュの削除
+						this.dataCache.removeCacheData(data.dataInt);
+
+						// ファイルデータ終了データ記録の削除
+						this.fileExport.deleteKeyData(data.dataInt);
 					}
 				}
 			}
