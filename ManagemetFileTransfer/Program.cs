@@ -7,6 +7,7 @@ namespace ManagemetFileTransfer
 		public static void Main(string[] args)
 		{
 			Console.WriteLine("Hello World!!!");
+			ServerManagementController SvrMgCon = new ServerManagementController();
 		}
 	}
 }

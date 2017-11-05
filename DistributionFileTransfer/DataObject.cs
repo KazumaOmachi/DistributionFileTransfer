@@ -51,12 +51,17 @@ namespace DistributionFileTrasfer
 				this.dataStr = str;
 			}
 		}
-		public DataObject(MessageTypeEnum msgTyp, int key)
+
+		public DataObject(MessageTypeEnum msgTyp, int inddata)
 		{
 			this.messageType = msgTyp;
 			if (msgTyp == MessageTypeEnum.FileFinish)
 			{
-				this.key = key;
+				this.key = inddata;
+			}
+			if (msgTyp == MessageTypeEnum.DeleteFileData)
+			{
+				this.dataInt = inddata;
 			}
 		}
 
@@ -111,7 +116,13 @@ namespace DistributionFileTrasfer
 				this.key = BitConverter.ToInt32(keyByte, 0);
 
 			}
+			if (this.messageType == MessageTypeEnum.DeleteFileData)
+			{
+				byte[] intByte = new byte[4];
+				Array.Copy(data, 4, intByte, 0, intByte.Length);
+				this.dataInt = BitConverter.ToInt32(intByte, 0);
 
+			}
 		}
 
 		// 送信データに変換(object --> byte[])
@@ -133,6 +144,10 @@ namespace DistributionFileTrasfer
 			if (this.messageType == MessageTypeEnum.FileFinish)
 			{
 				sendData.AddRange(BitConverter.GetBytes(this.key));
+			}
+			if (this.messageType == MessageTypeEnum.DeleteFileData)
+			{
+				sendData.AddRange(BitConverter.GetBytes(this.dataInt));
 			}
 			return sendData.ToArray();
 		}

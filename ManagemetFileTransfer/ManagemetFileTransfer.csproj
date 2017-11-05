@@ -42,7 +42,7 @@
       <Link>DataObject.cs</Link>
     </Compile>
     <Compile Include="ServerNodeManager.cs" />
-    <Compile Include="ServerGroupController.cs" />
+    <Compile Include="ServerStatus.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
