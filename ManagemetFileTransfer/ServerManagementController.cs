@@ -15,13 +15,41 @@ namespace ManagemetFileTransfer
 		private ConcurrentDictionary<string, ServerStatus> serverStatus;
 		//ConcurrentDictionary<string, ServerStatus> serverStasutDict;
 		bool isStat;
-		int clientPort = 6901;
+		int clientPort;
 
-		public ServerManagementController()
+		public ServerManagementController(List<ConnectionInfo> conntctInfoList)
 		{
+
+
 			this.isStat = true;
 			this.severConnetList = new List<ServerNodeManager>();
 			this.serverStatus = new ConcurrentDictionary<string, ServerStatus>();
+
+			this.clientPort = conntctInfoList[0].clientPort;
+			Console.WriteLine("Region: " + conntctInfoList[0].region + " / connect Line: " + this.clientPort);
+			/****/
+			Dictionary<int, List<ConnectionInfo>> tmpDict = new Dictionary<int, List<ConnectionInfo>>();
+			foreach (ConnectionInfo line in conntctInfoList)
+			{
+				if (!tmpDict.ContainsKey(line.group))
+				{
+					List<ConnectionInfo> tmp = new List<ConnectionInfo>();
+					tmpDict.Add(line.group, tmp);
+
+				}
+				tmpDict[line.group].Add(line);
+			}
+
+			foreach (int key in tmpDict.Keys)
+			{
+				ServerNodeManager tmp = new ServerNodeManager(tmpDict[key]);
+				this.severConnetList.Add(tmp);
+			}
+
+			/****/
+
+
+
 			// head nodeのコネクション
 			for (int i = this.severConnetList.Count - 1; i >= 0; i--)
 			{
@@ -33,6 +61,7 @@ namespace ManagemetFileTransfer
 					{
 						//this.severConnetList[i].setHeadNodeConnection("client:" + clientPort);
 						data = new DataObject(MessageTypeEnum.ConnectInf, "client:" + clientPort);
+						Console.WriteLine("message send Client");
 					}
 					else
 					{

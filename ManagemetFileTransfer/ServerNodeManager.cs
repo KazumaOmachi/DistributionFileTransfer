@@ -14,20 +14,25 @@ namespace ManagemetFileTransfer
 	{
 		private List<NetWorkContoroller> serverList;
 		private ConcurrentDictionary<string, ServerStatus> serverStatus;
+		private ConcurrentDictionary<string, int> connctToInfo;
+		//List<ConnectionInfo> actConnectList;
 		private List<int> finishKetList;
 		private int retryCnt = 7;
 
-		public ServerNodeManager(List<string> connectList)
+		public ServerNodeManager(List<ConnectionInfo> connectList)//List<string> connectList)
 		{
 			this.serverList = new List<NetWorkContoroller>();
+			//this.actConnectList = new List<ConnectionInfo>();
 			this.serverStatus = new ConcurrentDictionary<string, ServerStatus>();
 			this.finishKetList = new List<int>();
 
+			this.connctToInfo = new ConcurrentDictionary<string, int>();
+
 			Parallel.ForEach(connectList, conectInf =>
 			{
-				string[] conInfList = conectInf.Split(':');
-				string ip = conInfList[0];
-				int port = Int32.Parse(conInfList[1]);
+				//string[] conInfList = conectInf.Split(':');
+				string ip = conectInf.ip;//conInfList[0];
+				int port = conectInf.managerPort; //Int32.Parse(conInfList[1]);
 
 				// サーバへ接続
 				NetWorkContoroller serverConnection = connectToServer(ip, port);
@@ -35,7 +40,10 @@ namespace ManagemetFileTransfer
 				{
 					this.serverList.Add(serverConnection);
 
+					// サーバのコネクション先を格納
+					this.connctToInfo.TryAdd(ip + ':' + port, conectInf.serverPort);
 
+					//this.actConnectList.Add(conectInf);
 				}
 			});
 
@@ -50,7 +58,10 @@ namespace ManagemetFileTransfer
 					this.serverList[i].setSndMessage(data);
 
 					ServerStatus tmpSvStat = new ServerStatus(connectionInfo);
+
 					string svStatKey = this.serverList[i].getIp() + ":" + this.serverList[i].getPort();
+					//string svStatKey = this.actConnectList[i].ip + ":" + this.actConnectList[i].serverPort;
+
 					this.serverStatus.TryAdd(svStatKey, tmpSvStat);
 				}
 			}
@@ -61,6 +72,8 @@ namespace ManagemetFileTransfer
 			System.Threading.ThreadPool.QueueUserWorkItem(checkConnectionThread);
 			System.Threading.ThreadPool.QueueUserWorkItem(dataRecievThread);
 		}
+
+
 
 		// マネージャからサーバへの接続
 		private NetWorkContoroller connectToServer(string ip, int port)
@@ -93,7 +106,10 @@ namespace ManagemetFileTransfer
 			int befNum = num - 1;
 			if (befNum >= 0)
 			{
-				toInf = this.serverList[befNum].getIp() + ":" + this.serverList[befNum].getPort();
+				//toInf =  this.actConnectList[befNum].ip + ":" + this.actConnectList[befNum].serverPort;
+				string  toInfTmp = this.serverList[befNum].getIp() + ":" + this.serverList[befNum].getPort();
+				int connectToPort = this.connctToInfo[toInfTmp];
+				toInf = this.serverList[befNum].getIp() + ":" + connectToPort;
 			}
 			return toInf;
 		}
@@ -115,26 +131,28 @@ namespace ManagemetFileTransfer
 					else
 					{
 						string svStatKey = this.serverList[i].getIp() + ":" + this.serverList[i].getPort();
-
-						if (this.serverStatus[svStatKey].status)
+						if (this.serverStatus.ContainsKey(svStatKey))
 						{
-							// コネクションのリトライ
-							this.serverList[i] = connectToServer(this.serverList[i].getIp(), this.serverList[i].getPort());
-							if (this.serverList[i].getStatus())
+							if (this.serverStatus[svStatKey].status)
 							{
-								// リトライ後も接続できなかった場合
-								// 接続がない場合サーバダウンと判定。後続ノードに接続メッセージの送信
-								if (i + 1 < this.serverList.Count)
+								// コネクションのリトライ
+								this.serverList[i] = connectToServer(this.serverList[i].getIp(), this.serverList[i].getPort());
+								if (this.serverList[i].getStatus())
 								{
-									string connectionInfo = createConnection(i);
-									DataObject data = new DataObject(MessageTypeEnum.ConnectInf, connectionInfo);
-									this.serverList[i + 1].setSndMessage(data);
+									// リトライ後も接続できなかった場合
+									// 接続がない場合サーバダウンと判定。後続ノードに接続メッセージの送信
+									if (i + 1 < this.serverList.Count)
+									{
+										string connectionInfo = createConnection(i);
+										DataObject data = new DataObject(MessageTypeEnum.ConnectInf, connectionInfo);
+										this.serverList[i + 1].setSndMessage(data);
+									}
+									this.serverList.Remove(this.serverList[i]);
 								}
+							}
+							else {
 								this.serverList.Remove(this.serverList[i]);
 							}
-						}
-						else {
-							this.serverList.Remove(this.serverList[i]);
 						}
 					}
 				}
@@ -144,7 +162,7 @@ namespace ManagemetFileTransfer
 		}
 
 
-		// サーバサーバ間のコネクションチェック
+		// データの受信
 		private void dataRecievThread(object e)
 		{
 			lock (((ICollection)this.serverList).SyncRoot)
@@ -154,31 +172,34 @@ namespace ManagemetFileTransfer
 					string svStatKey = this.serverList[i].getIp() + ":" + this.serverList[i].getPort();
 
 					DataObject rcData = this.serverList[i].getRcvMessage();
-					if (rcData.messageType == MessageTypeEnum.OKConnected)
+					if (rcData != null)
 					{
-						this.serverStatus[svStatKey].status = true;
-
-					}
-					else if (rcData.messageType == MessageTypeEnum.ConnectFail)
-					{
-						this.serverStatus[svStatKey].status = false;
-					}
-
-					// 最終ノードから伝送完了ファイル一覧を取得
-					if (rcData.messageType == MessageTypeEnum.ReturnFinishDataList)
-					{
-						string[] keyList = rcData.dataStr.Split(',');
-						List<int> tmp = new List<int>();
-						foreach (string key in keyList)
+						if (rcData.messageType == MessageTypeEnum.OKConnected)
 						{
-							tmp.Add(Int32.Parse(key));
-						}
-						lock (((ICollection)this.serverList).SyncRoot)
-						{
-							this.finishKetList = tmp;
-						}
-						getFinalTransferInfoRequest();
+							this.serverStatus[svStatKey].status = true;
 
+						}
+						else if (rcData.messageType == MessageTypeEnum.ConnectFail)
+						{
+							this.serverStatus[svStatKey].status = false;
+						}
+
+						// 最終ノードから伝送完了ファイル一覧を取得
+						if (rcData.messageType == MessageTypeEnum.ReturnFinishDataList)
+						{
+							string[] keyList = rcData.dataStr.Split(',');
+							List<int> tmp = new List<int>();
+							foreach (string key in keyList)
+							{
+								tmp.Add(Int32.Parse(key));
+							}
+							lock (((ICollection)this.serverList).SyncRoot)
+							{
+								this.finishKetList = tmp;
+							}
+							getFinalTransferInfoRequest();
+
+						}
 					}
 				}
 			}
@@ -205,7 +226,10 @@ namespace ManagemetFileTransfer
 			string toInf = null;
 			if (this.serverList.Count > 0)
 			{
-				toInf = this.serverList[0].getIp() + ":" + this.serverList[0].getPort();
+				//toInf = this.serverList[0].getIp() + ":" + this.serverList[0].getPort();
+				string toInfTmp = this.serverList[0].getIp() + ":" + this.serverList[0].getPort();
+				int connectToPort = this.connctToInfo[toInfTmp];
+				toInf = this.serverList[0].getIp() + ":" + connectToPort;
 			}
 			return toInf;
 		}

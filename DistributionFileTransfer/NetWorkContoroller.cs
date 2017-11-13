@@ -42,12 +42,28 @@ namespace DistributionFileTrasfer
 
 		public int getPort()
 		{
-			return  ((System.Net.IPEndPoint)tcpClient.Client.RemoteEndPoint).Port;
+			try
+			{
+				Console.WriteLine("remort port");
+				return ((System.Net.IPEndPoint)tcpClient.Client.RemoteEndPoint).Port;
+			}
+			catch
+			{
+				Console.WriteLine("local port");
+				return ((System.Net.IPEndPoint)tcpClient.Client.LocalEndPoint).Port;
+			}
 		}
 
 		public string getIp()
 		{
-			return ((System.Net.IPEndPoint)tcpClient.Client.RemoteEndPoint).Address.ToString();
+			try
+			{
+				return ((System.Net.IPEndPoint)tcpClient.Client.RemoteEndPoint).Address.ToString();
+			}
+			catch
+			{
+				return ((System.Net.IPEndPoint)tcpClient.Client.LocalEndPoint).Address.ToString();
+			}
 		}
 
 		public void setSndMessage(DataObject obj)
@@ -97,18 +113,20 @@ namespace DistributionFileTrasfer
 			//TcpClient client = (TcpClient)e;
 			if (this.tcpClient.Connected)
 			{
-				// データ長を取得して取り込み
-				byte[] dataLngByte = new byte[4];
-				int resSize = this.netStream.Read(dataLngByte, 0, dataLngByte.Length);
-				int dataLng = BitConverter.ToInt32(dataLngByte, 0);
-				if (dataLng > 0)
-				{
-					Console.WriteLine("TCP data receive " + dataLng);
+				
+					// データ長を取得して取り込み
+					byte[] dataLngByte = new byte[4];
+					int resSize = this.netStream.Read(dataLngByte, 0, dataLngByte.Length);
+					int dataLng = BitConverter.ToInt32(dataLngByte, 0);
+					if (dataLng > 0)
+					{
+						//Console.WriteLine("TCP data receive " + dataLng);
 
-					byte[] data = new byte[dataLng];
-					this.netStream.Read(data, 0, data.Length);
-					this.rcvList.Enqueue(data);
-				}
+						byte[] data = new byte[dataLng];
+						this.netStream.Read(data, 0, data.Length);
+						this.rcvList.Enqueue(data);
+					}
+			
 				System.Threading.Thread.Sleep(1);
 				System.Threading.ThreadPool.QueueUserWorkItem(rcvMessage);//, client);
 			}

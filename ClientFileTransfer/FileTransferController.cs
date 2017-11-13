@@ -12,7 +12,7 @@ namespace ClientFileTransfer
 
 		public FileTransferController() { }
 
-		public void run(string filePath)
+		public void run(string filePath,string[] connectList)
 		{
 			int portCnt = 3;
 			int fileSplitCnt = 5;
@@ -75,7 +75,7 @@ namespace ClientFileTransfer
 				// 分割・データの作成
 
 				// 伝送開始
-				string[] connectList = { "127.0.0.1:6001" };
+				//string[] connectList = { "127.0.0.1:6001" };
 				List<MultiConectionManager> multConList = new List<MultiConectionManager>();
 				foreach (string conStr in connectList)
 				{

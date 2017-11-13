@@ -43,6 +43,7 @@
     </Compile>
     <Compile Include="ServerNodeManager.cs" />
     <Compile Include="ServerStatus.cs" />
+    <Compile Include="ConnectionInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

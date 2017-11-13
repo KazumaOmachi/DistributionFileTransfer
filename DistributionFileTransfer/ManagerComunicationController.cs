@@ -32,6 +32,7 @@ namespace DistributionFileTransfer
 		                                     )
 
 		{
+			Console.WriteLine("manager ");
 			this.dataReciv = dataReciv;
 			this.dataCache = dataCache;
 			this.fileExport = fileExport;
@@ -53,6 +54,8 @@ namespace DistributionFileTransfer
 
 			// management受け入れのスレッドの起動
 			System.Threading.ThreadPool.QueueUserWorkItem(acceptManagemet);
+			System.Threading.ThreadPool.QueueUserWorkItem(dataManagementThreadAction);
+
 		}
 
 
@@ -60,6 +63,7 @@ namespace DistributionFileTransfer
 		private void acceptManagemet(object e)
 		{
 			TcpClient client = this.listener_.AcceptTcpClient();
+			Console.WriteLine("manager process connected");
 			NetWorkContoroller managent = new NetWorkContoroller(client);
 			System.Threading.ThreadPool.QueueUserWorkItem(acceptManagemet);
 
@@ -82,61 +86,63 @@ namespace DistributionFileTransfer
 						DataObject data = manager.getRcvMessage();
 
 						// 変装用メッセージ
-
-						DataObject rcData = new DataObject(MessageTypeEnum.HB);
-						// 分岐
-						// 接続情報の受信（サーバへのコネクト確立・クライアント解放）
-						if (data.messageType == MessageTypeEnum.ConnectInf)
+						if (data != null)
 						{
-							string[] dataStrList = data.dataStr.Split(':');
-							string ip = dataStrList[0];
-							int port = Int32.Parse(dataStrList[1]);
-							setDataReceiveThreadStarter(ip, port);
-							if (this.comManag.getStatus())
+							DataObject rcData = new DataObject(MessageTypeEnum.HB);
+							// 分岐
+							// 接続情報の受信（サーバへのコネクト確立・クライアント解放）
+							if (data.messageType == MessageTypeEnum.ConnectInf)
 							{
-								rcData = new DataObject(MessageTypeEnum.OKConnected);
+								string[] dataStrList = data.dataStr.Split(':');
+								string ip = dataStrList[0];
+								int port = Int32.Parse(dataStrList[1]);
+								setDataReceiveThreadStarter(ip, port);
+								Console.WriteLine("connection infomation received : "+ip + ":" + port);
+								if (this.comManag.getStatus())
+								{
+									rcData = new DataObject(MessageTypeEnum.OKConnected);
+								}
+								else {
+									rcData = new DataObject(MessageTypeEnum.ConnectFail);
+								}
 							}
-							else {
-								rcData = new DataObject(MessageTypeEnum.ConnectFail);
-							}
-						}
 
-						// コネクション状況の返答
-						else if (data.messageType == MessageTypeEnum.GetConnectStatus)
-						{
-							if (this.comManag.getStatus())
+							// コネクション状況の返答
+							else if (data.messageType == MessageTypeEnum.GetConnectStatus)
 							{
-								rcData = new DataObject(MessageTypeEnum.OKConnected);
+								if (this.comManag.getStatus())
+								{
+									rcData = new DataObject(MessageTypeEnum.OKConnected);
+								}
+								else {
+									rcData = new DataObject(MessageTypeEnum.ConnectFail);
+								}
 							}
-							else {
-								rcData = new DataObject(MessageTypeEnum.ConnectFail);
-							}
-						}
-						// 終了いるファイルリスト
-						else if (data.messageType == MessageTypeEnum.GetFinishDataList)
-						{
-							rcData = new DataObject(MessageTypeEnum.ReturnFinishDataList, this.fileExport.getFinishKeyList());
-
-						}
-
-						// クライアント切断
-						else if (data.messageType == MessageTypeEnum.DeleteFileData)
-						{
-							if (this.comManag.GetType() == typeof(ClientComunicationManager))
+							// 終了いるファイルリスト
+							else if (data.messageType == MessageTypeEnum.GetFinishDataList)
 							{
-								ClientComunicationManager tmpClientCon = this.comManag as ClientComunicationManager;
-								tmpClientCon.removeClient(data.dataInt);
-								this.dataReciv.setSendData(data);
-								rcData = new DataObject(MessageTypeEnum.DeleteMassageSend);
+								rcData = new DataObject(MessageTypeEnum.ReturnFinishDataList, this.fileExport.getFinishKeyList());
+
 							}
-							else {
-								rcData = new DataObject(MessageTypeEnum.DeleteMassageMissed);
+
+							// クライアント切断
+							else if (data.messageType == MessageTypeEnum.DeleteFileData)
+							{
+								if (this.comManag.GetType() == typeof(ClientComunicationManager))
+								{
+									ClientComunicationManager tmpClientCon = this.comManag as ClientComunicationManager;
+									tmpClientCon.removeClient(data.dataInt);
+									this.dataReciv.setSendData(data);
+									rcData = new DataObject(MessageTypeEnum.DeleteMassageSend);
+								}
+								else {
+									rcData = new DataObject(MessageTypeEnum.DeleteMassageMissed);
+								}
 							}
+
+
+							manager.setSndMessage(rcData);
 						}
-
-
-						manager.setSndMessage(rcData);
-
 						//
 					}
 					else
@@ -146,6 +152,7 @@ namespace DistributionFileTransfer
 				}
 			}
 			System.Threading.Thread.Sleep(10);
+			System.Threading.ThreadPool.QueueUserWorkItem(dataManagementThreadAction);
 
 		}
 

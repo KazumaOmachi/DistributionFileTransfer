@@ -8,7 +8,13 @@ namespace DistributionFileTransfer
 		{
 
 			Console.WriteLine("Hello World!");
-
+			int serverPort = 0;
+			int managerPort = 0;
+			if (args.Length > 0)
+			{
+				serverPort = Int32.Parse(args[0]);
+				managerPort =Int32.Parse(args[1]);
+			}
 			/* Debug */
 			// server -> server
 			/*
@@ -25,16 +31,19 @@ namespace DistributionFileTransfer
 				recievePort = 6501;
 			}
 			*/
-			int recievePort = 6501;
+			//int recievePort = 6501;
 
-
+			Console.WriteLine("server port " + serverPort + " / manager port " + managerPort);
 			FileExportController fileCtl = new FileExportController();
 			DataCacheController cache = new DataCacheController();
 
-			DataSenderController sender = new DataSenderController(cache, recievePort);
+			// DataSenderController sender = new DataSenderController(cache, recievePort);
+			DataSenderController sender = new DataSenderController(cache, serverPort);
+
 			DataReceiverController receiver = new DataReceiverController(cache, fileCtl, sender);
 
-			ManagerComunicationController manager = new ManagerComunicationController(receiver,cache,fileCtl,sender, 6901);
+			//ManagerComunicationController manager = new ManagerComunicationController(receiver,cache,fileCtl,sender, 6901);
+			ManagerComunicationController manager = new ManagerComunicationController(receiver, cache, fileCtl, sender, managerPort);
 
 			/* Debug */
 			// クライアント用ポートの設定

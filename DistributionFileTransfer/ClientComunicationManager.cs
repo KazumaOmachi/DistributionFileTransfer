@@ -26,7 +26,7 @@ namespace DistributionFileTransfer
 				string ipString = "0.0.0.0";
 				IPAddress ipAdd = IPAddress.Parse(ipString);
 				//int port = 6001;
-
+				Console.WriteLine("Start Client : "+ ipString + ":" + port);
 				this.listener_ = new TcpListener(ipAdd, port);
 				this.listener_.Start();
 
